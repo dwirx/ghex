@@ -154,18 +154,59 @@ func detectPlatform(host string) string {
 	return "other"
 }
 
+// PlatformURLConfig holds URL configuration for a platform
+type PlatformURLConfig struct {
+	SSHFormat   string // Format string for SSH URL (e.g., "git@%s:%s")
+	HTTPSFormat string // Format string for HTTPS URL (e.g., "https://%s/%s")
+	DefaultHost string // Default host for the platform
+}
+
+// platformURLConfigs holds URL configurations for each platform
+var platformURLConfigs = map[string]PlatformURLConfig{
+	"github": {
+		SSHFormat:   "git@%s:%s",
+		HTTPSFormat: "https://%s/%s",
+		DefaultHost: "github.com",
+	},
+	"gitlab": {
+		SSHFormat:   "git@%s:%s",
+		HTTPSFormat: "https://%s/%s",
+		DefaultHost: "gitlab.com",
+	},
+	"bitbucket": {
+		SSHFormat:   "git@%s:%s",
+		HTTPSFormat: "https://%s/%s",
+		DefaultHost: "bitbucket.org",
+	},
+	"gitea": {
+		SSHFormat:   "git@%s:%s",
+		HTTPSFormat: "https://%s/%s",
+		DefaultHost: "", // Gitea requires custom domain
+	},
+	"other": {
+		SSHFormat:   "git@%s:%s",
+		HTTPSFormat: "https://%s/%s",
+		DefaultHost: "",
+	},
+}
+
+// GetPlatformURLConfig returns URL configuration for a platform
+func GetPlatformURLConfig(platform string) PlatformURLConfig {
+	platform = strings.ToLower(platform)
+	if config, ok := platformURLConfigs[platform]; ok {
+		return config
+	}
+	return platformURLConfigs["other"]
+}
+
 // BuildRemoteURL builds a remote URL for a given platform
 func BuildRemoteURL(platform, domain, repoPath string, useSSH bool) string {
+	config := GetPlatformURLConfig(platform)
+
 	if domain == "" {
-		switch platform {
-		case "github":
-			domain = "github.com"
-		case "gitlab":
-			domain = "gitlab.com"
-		case "bitbucket":
-			domain = "bitbucket.org"
-		default:
-			domain = "github.com"
+		domain = config.DefaultHost
+		if domain == "" {
+			domain = "github.com" // Fallback
 		}
 	}
 
@@ -175,10 +216,26 @@ func BuildRemoteURL(platform, domain, repoPath string, useSSH bool) string {
 	}
 
 	if useSSH {
-		return fmt.Sprintf("git@%s:%s", domain, repoPath)
+		return fmt.Sprintf(config.SSHFormat, domain, repoPath)
 	}
 
-	return fmt.Sprintf("https://%s/%s", domain, repoPath)
+	return fmt.Sprintf(config.HTTPSFormat, domain, repoPath)
+}
+
+// BuildSSHRemoteURL builds an SSH remote URL for a platform
+func BuildSSHRemoteURL(platform, domain, repoPath string) string {
+	return BuildRemoteURL(platform, domain, repoPath, true)
+}
+
+// BuildHTTPSRemoteURL builds an HTTPS remote URL for a platform
+func BuildHTTPSRemoteURL(platform, domain, repoPath string) string {
+	return BuildRemoteURL(platform, domain, repoPath, false)
+}
+
+// GetDefaultDomain returns the default domain for a platform
+func GetDefaultDomain(platform string) string {
+	config := GetPlatformURLConfig(platform)
+	return config.DefaultHost
 }
 
 // WithGitSuffix ensures a repo path has .git suffix

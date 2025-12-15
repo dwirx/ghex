@@ -118,3 +118,127 @@ func Load() (*AppConfig, error) {
 func Save(cfg *AppConfig) error {
 	return GetManager().Save(cfg)
 }
+
+// ToJSON serializes an Account to JSON string for debugging
+func (a *Account) ToJSON() (string, error) {
+	data, err := json.MarshalIndent(a, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+// FromJSON deserializes an Account from JSON string
+func AccountFromJSON(jsonStr string) (*Account, error) {
+	var acc Account
+	if err := json.Unmarshal([]byte(jsonStr), &acc); err != nil {
+		return nil, err
+	}
+	return &acc, nil
+}
+
+// ToJSON serializes AppConfig to JSON string for debugging
+func (c *AppConfig) ToJSON() (string, error) {
+	data, err := json.MarshalIndent(c, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+// AppConfigFromJSON deserializes AppConfig from JSON string
+func AppConfigFromJSON(jsonStr string) (*AppConfig, error) {
+	var cfg AppConfig
+	if err := json.Unmarshal([]byte(jsonStr), &cfg); err != nil {
+		return nil, err
+	}
+	
+	// Ensure slices are not nil
+	if cfg.Accounts == nil {
+		cfg.Accounts = []Account{}
+	}
+	if cfg.ActivityLog == nil {
+		cfg.ActivityLog = []ActivityLogEntry{}
+	}
+	if cfg.HealthChecks == nil {
+		cfg.HealthChecks = []HealthStatus{}
+	}
+	
+	return &cfg, nil
+}
+
+// Clone creates a deep copy of an Account
+func (a *Account) Clone() Account {
+	clone := Account{
+		Name:        a.Name,
+		GitUserName: a.GitUserName,
+		GitEmail:    a.GitEmail,
+	}
+	
+	if a.SSH != nil {
+		clone.SSH = &SshConfig{
+			KeyPath:   a.SSH.KeyPath,
+			HostAlias: a.SSH.HostAlias,
+		}
+	}
+	
+	if a.Token != nil {
+		clone.Token = &TokenConfig{
+			Username: a.Token.Username,
+			Token:    a.Token.Token,
+		}
+	}
+	
+	if a.Platform != nil {
+		clone.Platform = &PlatformConfig{
+			Type:   a.Platform.Type,
+			Domain: a.Platform.Domain,
+			ApiUrl: a.Platform.ApiUrl,
+		}
+	}
+	
+	return clone
+}
+
+// Equals checks if two accounts are equal
+func (a *Account) Equals(other *Account) bool {
+	if a == nil || other == nil {
+		return a == other
+	}
+	
+	if a.Name != other.Name || a.GitUserName != other.GitUserName || a.GitEmail != other.GitEmail {
+		return false
+	}
+	
+	// Compare SSH
+	if (a.SSH == nil) != (other.SSH == nil) {
+		return false
+	}
+	if a.SSH != nil {
+		if a.SSH.KeyPath != other.SSH.KeyPath || a.SSH.HostAlias != other.SSH.HostAlias {
+			return false
+		}
+	}
+	
+	// Compare Token
+	if (a.Token == nil) != (other.Token == nil) {
+		return false
+	}
+	if a.Token != nil {
+		if a.Token.Username != other.Token.Username || a.Token.Token != other.Token.Token {
+			return false
+		}
+	}
+	
+	// Compare Platform
+	if (a.Platform == nil) != (other.Platform == nil) {
+		return false
+	}
+	if a.Platform != nil {
+		if a.Platform.Type != other.Platform.Type || a.Platform.Domain != other.Platform.Domain || a.Platform.ApiUrl != other.Platform.ApiUrl {
+			return false
+		}
+	}
+	
+	return true
+}

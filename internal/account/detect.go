@@ -7,6 +7,101 @@ import (
 	"github.com/dwirx/ghex/internal/git"
 )
 
+// Scoring weights for active account detection
+const (
+	ScoreUserName     = 30 // Git user.name match
+	ScoreUserEmail    = 30 // Git user.email match
+	ScoreSSHKey       = 20 // SSH key in use
+	ScorePlatform     = 20 // Platform match
+	MinConfidenceScore = 30 // Minimum score to consider a match
+)
+
+// MatchScore represents how well an account matches current context
+type MatchScore struct {
+	AccountName   string
+	Score         int
+	MatchedFields []string
+	IsActive      bool
+}
+
+// DetectActiveWithScore returns the best matching account with confidence score
+func (m *Manager) DetectActiveWithScore(repoPath string) (*MatchScore, error) {
+	if repoPath == "" {
+		repoPath = "."
+	}
+
+	// Check if we're in a git repository
+	if !git.IsGitRepo(repoPath) {
+		return nil, nil
+	}
+
+	// Get current git user and remote info
+	userName, userEmail, _ := git.GetCurrentUser(repoPath)
+	remoteURL, _ := git.GetRemoteURL("origin", repoPath)
+
+	if userName == "" && userEmail == "" && remoteURL == "" {
+		return nil, nil
+	}
+
+	// Determine auth type and platform from remote URL
+	isSSH := strings.HasPrefix(remoteURL, "git@") || strings.HasPrefix(remoteURL, "ssh://")
+	detectedPlatform := DetectPlatformFromURL(remoteURL)
+
+	var bestMatch *MatchScore
+
+	for _, account := range m.cfg.Accounts {
+		score := 0
+		matchedFields := []string{}
+
+		// Check git user.name match (30 points)
+		if account.GitUserName != "" && userName != "" {
+			if strings.EqualFold(account.GitUserName, userName) {
+				score += ScoreUserName
+				matchedFields = append(matchedFields, "user.name")
+			}
+		}
+
+		// Check git user.email match (30 points)
+		if account.GitEmail != "" && userEmail != "" {
+			if strings.EqualFold(account.GitEmail, userEmail) {
+				score += ScoreUserEmail
+				matchedFields = append(matchedFields, "user.email")
+			}
+		}
+
+		// Check SSH key in use (20 points)
+		if isSSH && account.SSH != nil {
+			score += ScoreSSHKey
+			matchedFields = append(matchedFields, "ssh")
+		} else if !isSSH && account.Token != nil {
+			score += ScoreSSHKey
+			matchedFields = append(matchedFields, "token")
+		}
+
+		// Check platform match (20 points)
+		accPlatform := PlatformGitHub
+		if account.Platform != nil && account.Platform.Type != "" {
+			accPlatform = account.Platform.Type
+		}
+		if strings.EqualFold(accPlatform, detectedPlatform) {
+			score += ScorePlatform
+			matchedFields = append(matchedFields, "platform")
+		}
+
+		// Update best match if this score is higher
+		if score >= MinConfidenceScore && (bestMatch == nil || score > bestMatch.Score) {
+			bestMatch = &MatchScore{
+				AccountName:   account.Name,
+				Score:         score,
+				MatchedFields: matchedFields,
+				IsActive:      true,
+			}
+		}
+	}
+
+	return bestMatch, nil
+}
+
 // DetectActive detects the currently active account for a repository
 func (m *Manager) DetectActive(repoPath string) (string, error) {
 	if repoPath == "" {
