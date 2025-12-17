@@ -83,7 +83,7 @@ func runUpdate() {
 	if !updateForce && !updateYes {
 		fmt.Print("Do you want to update? [y/N]: ")
 		var response string
-		fmt.Scanln(&response)
+		_, _ = fmt.Scanln(&response)
 		response = strings.ToLower(strings.TrimSpace(response))
 		if response != "y" && response != "yes" {
 			ui.ShowInfo("Update cancelled")
@@ -127,7 +127,7 @@ func runRollback() {
 	if !updateForce && !updateYes {
 		fmt.Print("Do you want to rollback to the previous version? [y/N]: ")
 		var response string
-		fmt.Scanln(&response)
+		_, _ = fmt.Scanln(&response)
 		response = strings.ToLower(strings.TrimSpace(response))
 		if response != "y" && response != "yes" {
 			ui.ShowInfo("Rollback cancelled")

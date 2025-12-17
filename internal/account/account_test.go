@@ -73,7 +73,7 @@ func TestFindAccount(t *testing.T) {
 		Name:        "find-test",
 		GitUserName: "Find User",
 	}
-	manager.Add(acc)
+	_ = manager.Add(acc)
 
 	// Test exact match
 	found := manager.Find("find-test")
@@ -102,9 +102,9 @@ func TestRemoveAccount(t *testing.T) {
 	cfg := config.NewAppConfig()
 	manager := NewManager(cfg)
 
-	manager.Add(config.Account{Name: "account1"})
-	manager.Add(config.Account{Name: "account2"})
-	manager.Add(config.Account{Name: "account3"})
+	_ = manager.Add(config.Account{Name: "account1"})
+	_ = manager.Add(config.Account{Name: "account2"})
+	_ = manager.Add(config.Account{Name: "account3"})
 
 	if len(cfg.Accounts) != 3 {
 		t.Fatalf("Expected 3 accounts, got %d", len(cfg.Accounts))
@@ -145,7 +145,7 @@ func TestUpdateAccount(t *testing.T) {
 	cfg := config.NewAppConfig()
 	manager := NewManager(cfg)
 
-	manager.Add(config.Account{
+	_ = manager.Add(config.Account{
 		Name:        "update-test",
 		GitUserName: "Original Name",
 		GitEmail:    "original@example.com",
@@ -189,8 +189,8 @@ func TestListAccounts(t *testing.T) {
 	}
 
 	// Add accounts
-	manager.Add(config.Account{Name: "acc1"})
-	manager.Add(config.Account{Name: "acc2"})
+	_ = manager.Add(config.Account{Name: "acc1"})
+	_ = manager.Add(config.Account{Name: "acc2"})
 
 	list = manager.List()
 	if len(list) != 2 {

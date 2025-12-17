@@ -196,21 +196,21 @@ func ForceFixKeyPermissions(keyPath string) bool {
 	// Use chmod command directly for more reliable permission fixing
 	if !platform.IsWindows() {
 		// Fix private key permissions (600)
-		shell.Exec("chmod", "600", keyPath)
+		_, _ = shell.Exec("chmod", "600", keyPath)
 
 		// Fix public key permissions (644) if exists
 		pubPath := keyPath + ".pub"
 		if platform.FileExists(pubPath) {
-			shell.Exec("chmod", "644", pubPath)
+			_, _ = shell.Exec("chmod", "644", pubPath)
 		}
 		return true
 	}
 
 	// On Windows, use os.Chmod (may not work perfectly but try anyway)
-	os.Chmod(keyPath, 0600)
+	_ = os.Chmod(keyPath, 0600)
 	pubPath := keyPath + ".pub"
 	if platform.FileExists(pubPath) {
-		os.Chmod(pubPath, 0644)
+		_ = os.Chmod(pubPath, 0644)
 	}
 	return true
 }
@@ -221,12 +221,12 @@ func EnsureSSHDirPermissions() {
 
 	if !platform.IsWindows() {
 		// Fix SSH directory permissions (700)
-		shell.Exec("chmod", "700", sshDir)
+		_, _ = shell.Exec("chmod", "700", sshDir)
 
 		// Fix SSH config permissions (600) if exists
 		configPath := sshDir + "/config"
 		if platform.FileExists(configPath) {
-			shell.Exec("chmod", "600", configPath)
+			_, _ = shell.Exec("chmod", "600", configPath)
 		}
 	}
 }

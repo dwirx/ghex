@@ -130,7 +130,7 @@ func ShowIndentedKeyValue(key, value string, indent int) {
 func Confirm(message string) bool {
 	fmt.Printf("%s %s [y/N]: ", PrimaryStyle.Render("◉"), TextStyle.Render(message))
 	var response string
-	fmt.Scanln(&response)
+	_, _ = fmt.Scanln(&response)
 	response = strings.ToLower(strings.TrimSpace(response))
 	return response == "y" || response == "yes"
 }
@@ -139,7 +139,7 @@ func Confirm(message string) bool {
 func Prompt(message string) string {
 	fmt.Printf("%s %s: ", PrimaryStyle.Render("◇"), TextStyle.Render(message))
 	var response string
-	fmt.Scanln(&response)
+	_, _ = fmt.Scanln(&response)
 	return strings.TrimSpace(response)
 }
 
@@ -151,7 +151,7 @@ func PromptWithDefault(message, defaultValue string) string {
 		fmt.Printf("%s %s: ", PrimaryStyle.Render("◇"), TextStyle.Render(message))
 	}
 	var response string
-	fmt.Scanln(&response)
+	_, _ = fmt.Scanln(&response)
 	response = strings.TrimSpace(response)
 	if response == "" {
 		return defaultValue
@@ -163,6 +163,6 @@ func PromptWithDefault(message, defaultValue string) string {
 func PromptPassword(message string) string {
 	fmt.Printf("%s %s: ", PrimaryStyle.Render("◇"), TextStyle.Render(message))
 	var response string
-	fmt.Scanln(&response)
+	_, _ = fmt.Scanln(&response)
 	return strings.TrimSpace(response)
 }
