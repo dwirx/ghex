@@ -120,7 +120,7 @@ func (u *Updater) Update(release *ReleaseInfo, progress ProgressCallback) error 
 	// Replace binary
 	if err := u.BinaryManager.Replace(binaryPath); err != nil {
 		// Try to restore from backup
-		u.BinaryManager.Restore()
+		_ = u.BinaryManager.Restore()
 		return err
 	}
 

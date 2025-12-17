@@ -18,7 +18,7 @@ func AddGitShortcuts(rootCmd *cobra.Command) {
 		Use:   "gs",
 		Short: "git status",
 		Run: func(cmd *cobra.Command, args []string) {
-			shell.RunInteractive("git", "status")
+			_ = shell.RunInteractive("git", "status")
 		},
 	})
 
@@ -27,7 +27,7 @@ func AddGitShortcuts(rootCmd *cobra.Command) {
 		Use:   "gb",
 		Short: "git branch",
 		Run: func(cmd *cobra.Command, args []string) {
-			shell.RunInteractive("git", "branch")
+			_ = shell.RunInteractive("git", "branch")
 		},
 	})
 
@@ -36,7 +36,7 @@ func AddGitShortcuts(rootCmd *cobra.Command) {
 		Use:   "gba",
 		Short: "git branch -a",
 		Run: func(cmd *cobra.Command, args []string) {
-			shell.RunInteractive("git", "branch", "-a")
+			_ = shell.RunInteractive("git", "branch", "-a")
 		},
 	})
 
@@ -45,7 +45,7 @@ func AddGitShortcuts(rootCmd *cobra.Command) {
 		Use:   "gbr",
 		Short: "git branch -r",
 		Run: func(cmd *cobra.Command, args []string) {
-			shell.RunInteractive("git", "branch", "-r")
+			_ = shell.RunInteractive("git", "branch", "-r")
 		},
 	})
 
@@ -55,7 +55,7 @@ func AddGitShortcuts(rootCmd *cobra.Command) {
 		Short: "git fetch origin",
 		Run: func(cmd *cobra.Command, args []string) {
 			ui.ShowInfo("Fetching from origin...")
-			shell.RunInteractive("git", "fetch", "origin")
+			_ = shell.RunInteractive("git", "fetch", "origin")
 			ui.ShowSuccess("Fetch completed")
 		},
 	})
@@ -66,7 +66,7 @@ func AddGitShortcuts(rootCmd *cobra.Command) {
 		Short: "git pull",
 		Run: func(cmd *cobra.Command, args []string) {
 			ui.ShowInfo("Pulling from remote...")
-			shell.RunInteractive("git", "pull")
+			_ = shell.RunInteractive("git", "pull")
 			ui.ShowSuccess("Pull completed")
 		},
 	})
@@ -77,7 +77,7 @@ func AddGitShortcuts(rootCmd *cobra.Command) {
 		Short: "git pull --rebase",
 		Run: func(cmd *cobra.Command, args []string) {
 			ui.ShowInfo("Pulling with rebase...")
-			shell.RunInteractive("git", "pull", "--rebase")
+			_ = shell.RunInteractive("git", "pull", "--rebase")
 			ui.ShowSuccess("Pull completed")
 		},
 	})
@@ -88,7 +88,7 @@ func AddGitShortcuts(rootCmd *cobra.Command) {
 		Short: "git checkout",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			shell.RunInteractive("git", "checkout", args[0])
+			_ = shell.RunInteractive("git", "checkout", args[0])
 		},
 	})
 
@@ -98,7 +98,7 @@ func AddGitShortcuts(rootCmd *cobra.Command) {
 		Short: "git checkout -b (create new branch)",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			shell.RunInteractive("git", "checkout", "-b", args[0])
+			_ = shell.RunInteractive("git", "checkout", "-b", args[0])
 		},
 	})
 
@@ -107,7 +107,7 @@ func AddGitShortcuts(rootCmd *cobra.Command) {
 		Use:   "gl",
 		Short: "git log --oneline",
 		Run: func(cmd *cobra.Command, args []string) {
-			shell.RunInteractive("git", "log", "--oneline", "-20")
+			_ = shell.RunInteractive("git", "log", "--oneline", "-20")
 		},
 	})
 
@@ -116,7 +116,7 @@ func AddGitShortcuts(rootCmd *cobra.Command) {
 		Use:   "gd",
 		Short: "git diff",
 		Run: func(cmd *cobra.Command, args []string) {
-			shell.RunInteractive("git", "diff")
+			_ = shell.RunInteractive("git", "diff")
 		},
 	})
 
@@ -125,7 +125,7 @@ func AddGitShortcuts(rootCmd *cobra.Command) {
 		Use:   "gds",
 		Short: "git diff --staged",
 		Run: func(cmd *cobra.Command, args []string) {
-			shell.RunInteractive("git", "diff", "--staged")
+			_ = shell.RunInteractive("git", "diff", "--staged")
 		},
 	})
 
@@ -199,7 +199,7 @@ func AddGitShortcuts(rootCmd *cobra.Command) {
 		Use:   "gst",
 		Short: "git stash",
 		Run: func(cmd *cobra.Command, args []string) {
-			shell.RunInteractive("git", "stash")
+			_ = shell.RunInteractive("git", "stash")
 		},
 	})
 
@@ -208,7 +208,7 @@ func AddGitShortcuts(rootCmd *cobra.Command) {
 		Use:   "gstp",
 		Short: "git stash pop",
 		Run: func(cmd *cobra.Command, args []string) {
-			shell.RunInteractive("git", "stash", "pop")
+			_ = shell.RunInteractive("git", "stash", "pop")
 		},
 	})
 
@@ -217,7 +217,7 @@ func AddGitShortcuts(rootCmd *cobra.Command) {
 		Use:   "greset",
 		Short: "git reset HEAD",
 		Run: func(cmd *cobra.Command, args []string) {
-			shell.RunInteractive("git", "reset", "HEAD")
+			_ = shell.RunInteractive("git", "reset", "HEAD")
 		},
 	})
 }

@@ -144,7 +144,7 @@ func (m *BinaryManager) replaceWindows(newBinaryPath string) error {
 	// Copy new binary to destination
 	if err := copyFile(newBinaryPath, m.BinaryPath); err != nil {
 		// Try to restore old binary
-		os.Rename(oldPath, m.BinaryPath)
+		_ = os.Rename(oldPath, m.BinaryPath)
 		return fmt.Errorf("failed to copy new binary: %w", err)
 	}
 

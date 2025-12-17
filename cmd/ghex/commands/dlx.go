@@ -32,7 +32,7 @@ func NewDlxCmd() *cobra.Command {
 					ShowInfo:        showInfo,
 					FollowRedirects: true,
 				}
-				download.FromURL(args[0], opts)
+				_ = download.FromURL(args[0], opts)
 			} else {
 				runDlxMenu()
 			}

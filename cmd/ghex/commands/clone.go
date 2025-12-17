@@ -30,7 +30,7 @@ func runClone(repoURL, targetDir string) {
 
 		choice := ui.Prompt("Enter choice")
 		var idx int
-		fmt.Sscanf(choice, "%d", &idx)
+		_, _ = fmt.Sscanf(choice, "%d", &idx)
 
 		if idx > 0 && idx <= len(cfg.Accounts) {
 			acc := cfg.Accounts[idx-1]
@@ -58,7 +58,7 @@ func runClone(repoURL, targetDir string) {
 				ui.ShowSuccess(fmt.Sprintf("Account '%s' configured", acc.Name))
 			}
 
-			config.Save(cfg)
+			_ = config.Save(cfg)
 			return
 		}
 	}

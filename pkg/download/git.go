@@ -255,7 +255,7 @@ func GitRelease(url string, opts ReleaseOptions) error {
 		toDownload = assets
 	} else {
 		var idx int
-		fmt.Sscanf(choice, "%d", &idx)
+		_, _ = fmt.Sscanf(choice, "%d", &idx)
 		if idx < 1 || idx > len(assets) {
 			return fmt.Errorf("invalid selection")
 		}
