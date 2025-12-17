@@ -10,6 +10,7 @@ const (
 	PlatformGitLab    = "gitlab"
 	PlatformBitbucket = "bitbucket"
 	PlatformGitea     = "gitea"
+	PlatformCodeberg  = "codeberg"
 	PlatformOther     = "other"
 )
 
@@ -19,6 +20,7 @@ const (
 	IconGitLab    = "🦊"
 	IconBitbucket = "🪣"
 	IconGitea     = "🍵"
+	IconCodeberg  = "🏔️"
 	IconOther     = "🔗"
 )
 
@@ -55,6 +57,12 @@ var platformRegistry = map[string]PlatformInfo{
 		Icon:   IconGitea,
 		Name:   "Gitea",
 		Domain: "",
+	},
+	PlatformCodeberg: {
+		Type:   PlatformCodeberg,
+		Icon:   IconCodeberg,
+		Name:   "Codeberg",
+		Domain: "codeberg.org",
 	},
 	PlatformOther: {
 		Type:   PlatformOther,
@@ -109,7 +117,10 @@ func DetectPlatformFromURL(url string) string {
 	if strings.Contains(url, "bitbucket.org") || strings.Contains(url, "bitbucket:") {
 		return PlatformBitbucket
 	}
-	if strings.Contains(url, "gitea") || strings.Contains(url, "codeberg.org") {
+	if strings.Contains(url, "codeberg.org") {
+		return PlatformCodeberg
+	}
+	if strings.Contains(url, "gitea") {
 		return PlatformGitea
 	}
 
@@ -123,6 +134,7 @@ func GetSupportedPlatforms() []string {
 		PlatformGitLab,
 		PlatformBitbucket,
 		PlatformGitea,
+		PlatformCodeberg,
 		PlatformOther,
 	}
 }

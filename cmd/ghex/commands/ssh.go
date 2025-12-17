@@ -408,6 +408,8 @@ func runSwitchGlobalSSH(cfg *config.AppConfig) {
 				platformName = "Bitbucket"
 			case "gitea":
 				platformName = "Gitea"
+			case "codeberg":
+				platformName = "Codeberg"
 			}
 		}
 		items[i] = ui.SelectorItem{
@@ -446,6 +448,10 @@ func runSwitchGlobalSSH(cfg *config.AppConfig) {
 		case "gitea":
 			platformName = "Gitea"
 			platformIcon = "🍵"
+		case "codeberg":
+			host = "codeberg.org"
+			platformName = "Codeberg"
+			platformIcon = "🏔️"
 		}
 		if acc.Platform.Domain != "" {
 			host = acc.Platform.Domain
@@ -521,6 +527,10 @@ func runSwitchGlobalSSH(cfg *config.AppConfig) {
 				ui.ShowInfo("2. Add it at: https://gitlab.com/-/profile/keys")
 			case "bitbucket":
 				ui.ShowInfo("2. Add it at: https://bitbucket.org/account/settings/ssh-keys/")
+			case "codeberg":
+				ui.ShowInfo("2. Add it at: https://codeberg.org/user/settings/keys")
+			case "gitea":
+				ui.ShowInfo("2. Add it at your Gitea instance: /user/settings/keys")
 			default:
 				ui.ShowInfo("2. Add it at: https://github.com/settings/keys")
 			}
@@ -581,6 +591,9 @@ func runTestConnection(cfg *config.AppConfig) {
 			case "gitea":
 				platformName = "Gitea"
 				platformIcon = "🍵"
+			case "codeberg":
+				platformName = "Codeberg"
+				platformIcon = "🏔️"
 			}
 		}
 		items[i+1] = ui.SelectorItem{
@@ -631,6 +644,10 @@ func runTestConnection(cfg *config.AppConfig) {
 		case "gitea":
 			platformName = "Gitea"
 			platformIcon = "🍵"
+		case "codeberg":
+			host = "codeberg.org"
+			platformName = "Codeberg"
+			platformIcon = "🏔️"
 		}
 		if acc.Platform.Domain != "" {
 			host = acc.Platform.Domain
@@ -731,6 +748,7 @@ func testSSHKeyDirectly(keys []string) {
 		{Title: "🐙 GitHub", Description: "github.com", Value: "github.com"},
 		{Title: "🦊 GitLab", Description: "gitlab.com", Value: "gitlab.com"},
 		{Title: "🪣 Bitbucket", Description: "bitbucket.org", Value: "bitbucket.org"},
+		{Title: "🏔️ Codeberg", Description: "codeberg.org", Value: "codeberg.org"},
 		{Title: "🌐 Custom", Description: "Enter custom host", Value: "__custom__"},
 	}
 

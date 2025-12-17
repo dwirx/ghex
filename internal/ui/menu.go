@@ -93,6 +93,7 @@ func SelectPlatform() (string, error) {
 		{Title: "🦊 GitLab", Value: "gitlab"},
 		{Title: "🪣 Bitbucket", Value: "bitbucket"},
 		{Title: "🍵 Gitea", Value: "gitea"},
+		{Title: "🏔️ Codeberg", Value: "codeberg"},
 		{Title: "🌐 Other", Value: "other"},
 	}
 

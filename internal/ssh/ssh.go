@@ -278,27 +278,51 @@ func TestConnectionWithKey(host, keyPath string) (bool, string, error) {
 
 	output, err := shell.Exec("ssh", args...)
 
-	// SSH -T returns exit code 1 for successful auth on GitHub
+	// SSH -T returns exit code 1 for successful auth on GitHub/GitLab/Gitea
 	// Check output for success patterns
 	successPatterns := []string{
+		// GitHub patterns
 		"successfully authenticated",
 		"Hi .+! You've successfully authenticated",
+		// GitLab patterns
 		"Welcome to GitLab",
+		// Bitbucket patterns
 		"logged in as",
 		"authenticated via",
-		"You can use git",
+		// Gitea patterns
 		"Hi there,",
+		"You've successfully authenticated",
+		"Welcome to Gitea",
+		"You can use git",
+		// Codeberg (Gitea-based)
+		"Welcome to Codeberg",
+		// Generic patterns
+		"successfully authenticated",
+		"authentication succeeded",
 	}
 
 	for _, pattern := range successPatterns {
 		matched, _ := regexp.MatchString("(?i)"+pattern, output)
 		if matched {
 			// Extract username if possible
-			userRe := regexp.MustCompile(`Hi\s+([^!,]+)[!,]|logged in as\s+(\S+)|@(\S+)|Hi there,?\s+([^!]+)!`)
-			if matches := userRe.FindStringSubmatch(output); len(matches) > 1 {
-				for _, m := range matches[1:] {
-					if m != "" {
-						return true, fmt.Sprintf("Successfully authenticated as %s", m), nil
+			// Patterns for different platforms:
+			// GitHub: "Hi username! You've successfully authenticated"
+			// GitLab: "Welcome to GitLab, @username!"
+			// Gitea: "Hi there, username! You've successfully authenticated"
+			// Bitbucket: "logged in as username"
+			userPatterns := []string{
+				`Hi\s+([^!,]+)[!,]`,           // GitHub, Gitea
+				`Hi there,?\s+([^!]+)!`,       // Gitea alternative
+				`logged in as\s+(\S+)`,        // Bitbucket
+				`@(\S+)`,                      // GitLab
+				`Welcome to \w+,?\s*@?(\S+)!`, // Generic welcome
+			}
+			for _, userPattern := range userPatterns {
+				userRe := regexp.MustCompile(userPattern)
+				if matches := userRe.FindStringSubmatch(output); len(matches) > 1 {
+					username := strings.TrimSpace(matches[1])
+					if username != "" {
+						return true, fmt.Sprintf("Successfully authenticated as %s", username), nil
 					}
 				}
 			}

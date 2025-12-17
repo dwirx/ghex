@@ -145,7 +145,7 @@ Windows:
 - 🏥 **Health Check** - Verify all account connections
 - 🌐 **Global SSH Switch** - Change default SSH key for platforms
 - 🧪 **Connection Testing** - Test SSH/Token authentication with detailed feedback
-- 🎯 **Multi-Platform** - GitHub, GitLab, Bitbucket, Gitea support
+- 🎯 **Multi-Platform** - GitHub, GitLab, Bitbucket, Gitea, Codeberg support
 
 ### Universal Downloader (dlx)
 - 📥 **Any URL Download** - Download files from any HTTP/HTTPS URL

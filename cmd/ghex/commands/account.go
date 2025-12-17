@@ -339,6 +339,7 @@ func runAddAccount(cfg *config.AppConfig) {
 		{Title: account.IconGitLab + " GitLab", Description: "gitlab.com", Value: account.PlatformGitLab},
 		{Title: account.IconBitbucket + " Bitbucket", Description: "bitbucket.org", Value: account.PlatformBitbucket},
 		{Title: account.IconGitea + " Gitea", Description: "Self-hosted Gitea", Value: account.PlatformGitea},
+		{Title: account.IconCodeberg + " Codeberg", Description: "codeberg.org", Value: account.PlatformCodeberg},
 		{Title: account.IconOther + " Other", Description: "Other Git platform", Value: account.PlatformOther},
 	}
 

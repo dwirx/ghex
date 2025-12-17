@@ -270,6 +270,7 @@ func SelectPlatformInteractive() (string, error) {
 		{Title: "🦊 GitLab", Description: "gitlab.com", Value: "gitlab"},
 		{Title: "🪣 Bitbucket", Description: "bitbucket.org", Value: "bitbucket"},
 		{Title: "🍵 Gitea", Description: "Self-hosted Gitea", Value: "gitea"},
+		{Title: "🏔️ Codeberg", Description: "codeberg.org", Value: "codeberg"},
 		{Title: "🌐 Other", Description: "Custom Git server", Value: "other"},
 	}
 

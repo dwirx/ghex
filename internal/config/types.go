@@ -14,7 +14,7 @@ type TokenConfig struct {
 
 // PlatformConfig holds git platform configuration
 type PlatformConfig struct {
-	Type   string `json:"type"`             // github, gitlab, bitbucket, gitea, other
+	Type   string `json:"type"`             // github, gitlab, bitbucket, gitea, codeberg, other
 	Domain string `json:"domain,omitempty"` // custom domain (e.g., gitlab.company.com)
 	ApiUrl string `json:"apiUrl,omitempty"` // custom API endpoint
 }

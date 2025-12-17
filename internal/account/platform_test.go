@@ -15,6 +15,7 @@ func TestGetPlatformInfo(t *testing.T) {
 		{PlatformGitLab, IconGitLab, "GitLab"},
 		{PlatformBitbucket, IconBitbucket, "Bitbucket"},
 		{PlatformGitea, IconGitea, "Gitea"},
+		{PlatformCodeberg, IconCodeberg, "Codeberg"},
 		{PlatformOther, IconOther, "Other"},
 		{"unknown", IconOther, "Other"}, // Unknown defaults to Other
 		{"GITHUB", IconGitHub, "GitHub"}, // Case insensitive
@@ -90,8 +91,11 @@ func TestDetectPlatformFromURL(t *testing.T) {
 		{"https://bitbucket.org/user/repo.git", PlatformBitbucket},
 		{"git@bitbucket.org:user/repo.git", PlatformBitbucket},
 
-		// Gitea / Codeberg
-		{"https://codeberg.org/user/repo.git", PlatformGitea},
+		// Codeberg
+		{"https://codeberg.org/user/repo.git", PlatformCodeberg},
+		{"git@codeberg.org:user/repo.git", PlatformCodeberg},
+
+		// Gitea
 		{"https://gitea.example.com/user/repo.git", PlatformGitea},
 
 		// Other
@@ -113,8 +117,8 @@ func TestDetectPlatformFromURL(t *testing.T) {
 func TestGetSupportedPlatforms(t *testing.T) {
 	platforms := GetSupportedPlatforms()
 
-	if len(platforms) != 5 {
-		t.Errorf("Expected 5 supported platforms, got %d", len(platforms))
+	if len(platforms) != 6 {
+		t.Errorf("Expected 6 supported platforms, got %d", len(platforms))
 	}
 
 	// Check all expected platforms are present
@@ -123,6 +127,7 @@ func TestGetSupportedPlatforms(t *testing.T) {
 		PlatformGitLab:    false,
 		PlatformBitbucket: false,
 		PlatformGitea:     false,
+		PlatformCodeberg:  false,
 		PlatformOther:     false,
 	}
 
@@ -149,6 +154,7 @@ func TestIsValidPlatform(t *testing.T) {
 		{"gitlab", true},
 		{"bitbucket", true},
 		{"gitea", true},
+		{"codeberg", true},
 		{"other", true},
 		{"GITHUB", true}, // Case insensitive
 		{"invalid", false},
@@ -179,6 +185,9 @@ func TestPlatformConstants(t *testing.T) {
 	if PlatformGitea != "gitea" {
 		t.Error("PlatformGitea should be 'gitea'")
 	}
+	if PlatformCodeberg != "codeberg" {
+		t.Error("PlatformCodeberg should be 'codeberg'")
+	}
 	if PlatformOther != "other" {
 		t.Error("PlatformOther should be 'other'")
 	}
@@ -197,6 +206,9 @@ func TestIconConstants(t *testing.T) {
 	}
 	if IconGitea != "🍵" {
 		t.Error("IconGitea should be 🍵")
+	}
+	if IconCodeberg != "🏔️" {
+		t.Error("IconCodeberg should be 🏔️")
 	}
 	if IconOther != "🔗" {
 		t.Error("IconOther should be 🔗")

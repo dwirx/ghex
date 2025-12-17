@@ -50,6 +50,12 @@ func GetPlatformInfo(acc *config.Account) PlatformInfo {
 		case "gitea":
 			info.Name = "Gitea"
 			info.Icon = "🍵"
+		case "codeberg":
+			info.Host = "codeberg.org"
+			info.Name = "Codeberg"
+			info.Icon = "🏔️"
+			info.KeysURL = "https://codeberg.org/user/settings/keys"
+			info.TokenURL = "https://codeberg.org/user/settings/applications"
 		}
 		if acc.Platform.Domain != "" {
 			info.Host = acc.Platform.Domain

@@ -147,6 +147,9 @@ func detectPlatform(host string) string {
 	if strings.Contains(host, "bitbucket") {
 		return "bitbucket"
 	}
+	if strings.Contains(host, "codeberg") {
+		return "codeberg"
+	}
 	if strings.Contains(host, "gitea") {
 		return "gitea"
 	}
@@ -182,6 +185,11 @@ var platformURLConfigs = map[string]PlatformURLConfig{
 		SSHFormat:   "git@%s:%s",
 		HTTPSFormat: "https://%s/%s",
 		DefaultHost: "", // Gitea requires custom domain
+	},
+	"codeberg": {
+		SSHFormat:   "git@%s:%s",
+		HTTPSFormat: "https://%s/%s",
+		DefaultHost: "codeberg.org",
 	},
 	"other": {
 		SSHFormat:   "git@%s:%s",
