@@ -46,6 +46,9 @@ func NewRootCmd() *cobra.Command {
 	// Update command
 	rootCmd.AddCommand(NewUpdateCmd())
 
+	// Uninstall command
+	rootCmd.AddCommand(NewUninstallCmd())
+
 	// Git shortcuts
 	AddGitShortcuts(rootCmd)
 

@@ -38,7 +38,7 @@ function Write-Warn {
     Write-Host $Message
 }
 
-function Write-Error {
+function Write-ErrorMsg {
     param([string]$Message)
     Write-Host "[ERROR] " -ForegroundColor Red -NoNewline
     Write-Host $Message
@@ -50,13 +50,18 @@ function Get-Architecture {
     switch ($arch) {
         "AMD64" { return "amd64" }
         "ARM64" { return "arm64" }
-        default { Write-Error "Unsupported architecture: $arch" }
+        default { Write-ErrorMsg "Unsupported architecture: $arch" }
     }
 }
 
 function Get-LatestVersion {
-    $response = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/latest"
-    return $response.tag_name
+    try {
+        $response = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/latest"
+        return $response.tag_name
+    }
+    catch {
+        Write-ErrorMsg "Failed to get latest version: $_"
+    }
 }
 
 function Install-Ghex {
@@ -79,9 +84,15 @@ function Install-Ghex {
         Write-Info "Extracting..."
         Expand-Archive -Path $zipPath -DestinationPath $tempDir -Force
         
-        $binary = Join-Path $tempDir "ghex-windows-$Arch.exe"
+        # Binary name from goreleaser is just "ghex.exe"
+        $binary = Join-Path $tempDir "ghex.exe"
+        
+        # Debug: show extracted files
+        Write-Info "Extracted files:"
+        Get-ChildItem $tempDir | ForEach-Object { Write-Host "  $_" }
+        
         if (-not (Test-Path $binary)) {
-            Write-Error "Binary not found after extraction"
+            Write-ErrorMsg "Binary 'ghex.exe' not found after extraction"
         }
         
         Write-Info "Installing to $InstallDir..."
@@ -116,6 +127,8 @@ function Test-Installation {
         Write-Host "Please restart your terminal to use 'ghex' command." -ForegroundColor Yellow
         Write-Host "Or run: " -NoNewline
         Write-Host "$ghexPath --help" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "To update GHEX later, run: ghex update" -ForegroundColor Green
     }
     else {
         Write-Warn "Installation completed but binary not found at expected location"
@@ -135,7 +148,7 @@ function Main {
     }
     
     if (-not $Version) {
-        Write-Error "Could not determine latest version"
+        Write-ErrorMsg "Could not determine latest version"
     }
     
     Write-Info "Installing GHEX $Version..."

@@ -1,0 +1,92 @@
+# Implementation Plan
+
+- [ ] 1. Create uninstall service core
+  - [ ] 1.1 Create `internal/uninstall/uninstall.go` with UninstallService interface and types
+    - Define UninstallOptions, UninstallPreview, UninstallResult structs
+    - Implement GetBinaryPath() with platform detection
+    - Implement GetConfigPath() using existing platform package
+    - _Requirements: 3.1, 3.2_
+  - [ ]* 1.2 Write property test for platform-specific binary paths
+    - **Property 4: Platform-specific binary path (Unix)**
+    - **Property 5: Platform-specific binary path (Windows)**
+    - **Validates: Requirements 3.1, 3.2**
+  - [ ] 1.3 Implement Preview() method
+    - Return UninstallPreview with binary path, config path, and files to remove
+    - Include PATH entry for Windows
+    - _Requirements: 5.1, 5.2_
+  - [ ]* 1.4 Write property test for dry-run output completeness
+    - **Property 7: Dry-run output completeness**
+    - **Validates: Requirements 5.2**
+
+- [ ] 2. Implement file removal operations
+  - [ ] 2.1 Implement RemoveBinary() method
+    - Remove binary file from install path
+    - Handle permission errors with clear messages
+    - _Requirements: 1.2, 3.4_
+  - [ ] 2.2 Implement RemoveConfig() method
+    - Remove config directory recursively
+    - Handle permission errors
+    - _Requirements: 2.2, 2.4_
+  - [ ] 2.3 Implement RemoveFromPath() for Windows
+    - Remove install directory from user PATH environment variable
+    - _Requirements: 3.3_
+  - [ ]* 2.4 Write property test for binary removal
+    - **Property 1: Binary removal on confirmed uninstall**
+    - **Validates: Requirements 1.2**
+  - [ ]* 2.5 Write property test for purge operation
+    - **Property 2: Purge removes both binary and config**
+    - **Validates: Requirements 2.2**
+
+- [ ] 3. Implement Execute() with options handling
+  - [ ] 3.1 Implement Execute() method with full options support
+    - Handle --force flag to skip confirmation
+    - Handle --purge flag to remove config
+    - Handle --keep-config flag to preserve config
+    - Handle --dry-run flag to preview only
+    - _Requirements: 1.3, 2.2, 2.3, 5.1_
+  - [ ]* 3.2 Write property test for keep-config preservation
+    - **Property 3: Keep-config preserves configuration**
+    - **Validates: Requirements 2.3**
+  - [ ]* 3.3 Write property test for dry-run filesystem invariant
+    - **Property 6: Dry-run preserves filesystem state**
+    - **Validates: Requirements 5.1, 5.3**
+
+- [ ] 4. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 5. Create uninstall command
+  - [ ] 5.1 Create `cmd/ghex/commands/uninstall.go`
+    - Define cobra command with flags (--force, --purge, --keep-config, --dry-run)
+    - Implement confirmation prompt using existing UI package
+    - Implement config removal prompt
+    - _Requirements: 1.1, 1.3, 1.4, 2.1_
+  - [ ] 5.2 Register uninstall command in root.go
+    - Add NewUninstallCmd() to root command
+    - _Requirements: 1.1_
+  - [ ]* 5.3 Write unit tests for uninstall command
+    - Test flag parsing
+    - Test prompt behavior with --force
+    - _Requirements: 1.1, 1.3_
+
+- [ ] 6. Create uninstall scripts
+  - [ ] 6.1 Create `scripts/uninstall.sh` for Linux/macOS
+    - Detect platform and architecture
+    - Remove binary from /usr/local/bin
+    - Prompt for config removal
+    - Handle permission errors with sudo instructions
+    - _Requirements: 4.1, 4.3, 4.4_
+  - [ ] 6.2 Create `scripts/uninstall.ps1` for Windows
+    - Remove binary and install directory
+    - Remove PATH entry
+    - Prompt for config removal
+    - Handle permission errors
+    - _Requirements: 4.2, 4.3, 4.4_
+
+- [ ] 7. Update documentation
+  - [ ] 7.1 Update README.md with uninstall instructions
+    - Add uninstall command documentation
+    - Add uninstall script usage
+    - _Requirements: 1.1, 4.1, 4.2_
+
+- [ ] 8. Final Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.

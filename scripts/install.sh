@@ -101,13 +101,18 @@ download_and_install() {
         unzip -q "$filename"
     fi
     
-    local binary="ghex-${os}-${arch}"
+    # Binary name from goreleaser is just "ghex" (or "ghex.exe" on windows)
+    local binary="ghex"
     if [ "$os" = "windows" ]; then
-        binary="${binary}.exe"
+        binary="ghex.exe"
     fi
     
+    # Debug: show extracted files
+    info "Extracted files:"
+    ls -la
+    
     if [ ! -f "$binary" ]; then
-        error "Binary not found after extraction"
+        error "Binary '$binary' not found after extraction. Files in archive: $(ls -1)"
     fi
     
     info "Installing to ${INSTALL_DIR}..."
@@ -133,6 +138,8 @@ verify_installation() {
         echo "  Location: $(which ghex)"
         echo ""
         echo "Run 'ghex --help' to get started."
+        echo ""
+        echo "To update GHEX later, run: ghex update"
     else
         warn "Installation completed but 'ghex' not found in PATH"
         echo "You may need to add ${INSTALL_DIR} to your PATH"

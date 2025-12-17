@@ -83,6 +83,58 @@ sudo make install
 ghex version
 ```
 
+### Update GHEX
+
+```bash
+# Update to latest version
+ghex update
+
+# Check for updates without installing
+ghex update --check
+```
+
+### Uninstall
+
+**Using CLI (Recommended):**
+```bash
+# Uninstall with confirmation
+ghex uninstall
+
+# Uninstall and remove config files
+ghex uninstall --purge
+
+# Uninstall without confirmation
+ghex uninstall --force
+```
+
+**Using Scripts:**
+
+Linux/macOS:
+```bash
+curl -sSL https://raw.githubusercontent.com/dwirx/ghex/main/scripts/uninstall.sh | bash
+
+# With options
+curl -sSL https://raw.githubusercontent.com/dwirx/ghex/main/scripts/uninstall.sh | bash -s -- --purge
+```
+
+Windows (PowerShell):
+```powershell
+iwr -useb https://raw.githubusercontent.com/dwirx/ghex/main/scripts/uninstall.ps1 | iex
+```
+
+**Manual Uninstall:**
+
+Linux/macOS:
+```bash
+sudo rm /usr/local/bin/ghex
+rm -rf ~/.config/ghe
+```
+
+Windows:
+1. Delete `%LOCALAPPDATA%\ghex` folder
+2. Remove the folder from PATH environment variable
+3. Optionally delete `%APPDATA%\ghe` for config files
+
 ## 🌟 Features
 
 ### Account Management
@@ -182,6 +234,16 @@ ghex shovenc "msg"# git add, commit, push (no confirm)
 ghex setname "John Doe"      # Set global user.name
 ghex setmail john@email.com  # Set global user.email
 ghex showconfig              # Show git config
+```
+
+### Update & Uninstall
+```bash
+ghex update              # Update to latest version
+ghex update --check      # Check for updates only
+ghex uninstall           # Uninstall with confirmation
+ghex uninstall --purge   # Uninstall and remove config
+ghex uninstall --force   # Uninstall without confirmation
+ghex uninstall --dry-run # Preview what will be removed
 ```
 
 ## 🔧 Building
