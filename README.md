@@ -2,6 +2,8 @@
 
 [![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://go.dev)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/dwirx/ghex?style=for-the-badge)](https://github.com/dwirx/ghex/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/dwirx/ghex/ci.yml?style=for-the-badge&label=CI)](https://github.com/dwirx/ghex/actions)
 
 *✨ A beautiful, interactive CLI tool for seamlessly managing multiple GitHub accounts per repository with universal download capabilities*
 
@@ -23,6 +25,49 @@ ghex version
 
 ## 📦 Installation
 
+### Quick Install (Recommended)
+
+**Linux/macOS:**
+```bash
+curl -sSL https://raw.githubusercontent.com/dwirx/ghex/main/scripts/install.sh | bash
+```
+
+**Windows (PowerShell):**
+```powershell
+iwr -useb https://raw.githubusercontent.com/dwirx/ghex/main/scripts/install.ps1 | iex
+```
+
+### Manual Download
+
+Download from [GitHub Releases](https://github.com/dwirx/ghex/releases):
+
+| Platform | Architecture | Download |
+|----------|--------------|----------|
+| Linux | x64 | `ghex-linux-amd64.tar.gz` |
+| Linux | ARM64 | `ghex-linux-arm64.tar.gz` |
+| macOS | Intel | `ghex-darwin-amd64.tar.gz` |
+| macOS | Apple Silicon | `ghex-darwin-arm64.tar.gz` |
+| Windows | x64 | `ghex-windows-amd64.zip` |
+| Windows | ARM64 | `ghex-windows-arm64.zip` |
+
+**Linux/macOS Manual Install:**
+```bash
+# Download (replace with your platform)
+curl -LO https://github.com/dwirx/ghex/releases/latest/download/ghex-linux-amd64.tar.gz
+
+# Extract
+tar -xzf ghex-linux-amd64.tar.gz
+
+# Install
+sudo mv ghex-linux-amd64 /usr/local/bin/ghex
+chmod +x /usr/local/bin/ghex
+```
+
+**Windows Manual Install:**
+1. Download `ghex-windows-amd64.zip` from releases
+2. Extract to a folder (e.g., `C:\Program Files\ghex`)
+3. Add the folder to your PATH environment variable
+
 ### From Source
 
 ```bash
@@ -32,15 +77,11 @@ make build
 sudo make install
 ```
 
-### Pre-built Binaries
+### Verify Installation
 
-Download from [GitHub Releases](https://github.com/dwirx/ghex/releases):
-
-- `ghex-linux-amd64` - Linux x64
-- `ghex-linux-arm64` - Linux ARM64
-- `ghex-darwin-amd64` - macOS Intel
-- `ghex-darwin-arm64` - macOS Apple Silicon
-- `ghex-windows-amd64.exe` - Windows x64
+```bash
+ghex version
+```
 
 ## 🌟 Features
 

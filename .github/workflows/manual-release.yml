@@ -1,0 +1,214 @@
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0 without v prefix)'
+        required: true
+        type: string
+      release_type:
+        description: 'Release type'
+        required: true
+        type: choice
+        options:
+          - stable
+          - beta
+          - alpha
+      changelog:
+        description: 'Changelog (what changed in this release)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    name: Validate Input
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      prerelease: ${{ steps.tag.outputs.prerelease }}
+    steps:
+      - name: Validate version format
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Version must be in format X.Y.Z (e.g., 1.0.0)"
+            exit 1
+          fi
+
+      - name: Generate tag
+        id: tag
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          TYPE="${{ github.event.inputs.release_type }}"
+          
+          case $TYPE in
+            stable)
+              TAG="v${VERSION}"
+              PRERELEASE="false"
+              ;;
+            beta)
+              TAG="v${VERSION}-beta"
+              PRERELEASE="true"
+              ;;
+            alpha)
+              TAG="v${VERSION}-alpha"
+              PRERELEASE="true"
+              ;;
+          esac
+          
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "prerelease=${PRERELEASE}" >> $GITHUB_OUTPUT
+          echo "Tag: ${TAG}, Prerelease: ${PRERELEASE}"
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Run tests
+        run: go test -v -race ./...
+
+  build-and-release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    needs: [validate, test]
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            ext: ""
+          - goos: linux
+            goarch: arm64
+            ext: ""
+          - goos: darwin
+            goarch: amd64
+            ext: ""
+          - goos: darwin
+            goarch: arm64
+            ext: ""
+          - goos: windows
+            goarch: amd64
+            ext: ".exe"
+          - goos: windows
+            goarch: arm64
+            ext: ".exe"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          TAG="${{ needs.validate.outputs.tag }}"
+          BINARY="ghex-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}"
+          
+          go build -ldflags="-s -w -X main.Version=${TAG}" \
+            -o ${BINARY} ./cmd/ghex
+          
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            zip ghex-${{ matrix.goos }}-${{ matrix.goarch }}.zip ${BINARY} README.md LICENSE
+          else
+            tar -czvf ghex-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz ${BINARY} README.md LICENSE
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ghex-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: ghex-${{ matrix.goos }}-${{ matrix.goarch }}.*
+
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [validate, build-and-release]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Generate checksums
+        run: |
+          cd artifacts
+          sha256sum ghex-* > checksums.txt
+          cat checksums.txt
+
+      - name: Create release body
+        run: |
+          TAG="${{ needs.validate.outputs.tag }}"
+          TYPE="${{ github.event.inputs.release_type }}"
+          
+          cat > release-body.md << EOF
+          # GHEX ${TAG}
+          
+          ## Release Type: ${TYPE^}
+          
+          ## What's Changed
+          
+          ${{ github.event.inputs.changelog }}
+          
+          ## Installation
+          
+          ### Linux/macOS
+          \`\`\`bash
+          # Download and extract
+          curl -LO https://github.com/${{ github.repository }}/releases/download/${TAG}/ghex-linux-amd64.tar.gz
+          tar -xzf ghex-linux-amd64.tar.gz
+          
+          # Move to PATH
+          sudo mv ghex-linux-amd64 /usr/local/bin/ghex
+          chmod +x /usr/local/bin/ghex
+          \`\`\`
+          
+          ### Windows
+          \`\`\`powershell
+          # Download from releases page and add to PATH
+          # Or use scoop/chocolatey if available
+          \`\`\`
+          
+          ### macOS (Apple Silicon)
+          \`\`\`bash
+          curl -LO https://github.com/${{ github.repository }}/releases/download/${TAG}/ghex-darwin-arm64.tar.gz
+          tar -xzf ghex-darwin-arm64.tar.gz
+          sudo mv ghex-darwin-arm64 /usr/local/bin/ghex
+          \`\`\`
+          
+          ## Checksums
+          
+          See \`checksums.txt\` for SHA256 checksums of all binaries.
+          EOF
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.validate.outputs.tag }}
+          name: GHEX ${{ needs.validate.outputs.tag }}
+          body_path: release-body.md
+          draft: false
+          prerelease: ${{ needs.validate.outputs.prerelease }}
+          files: |
+            artifacts/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

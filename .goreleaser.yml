@@ -1,0 +1,123 @@
+# GoReleaser configuration
+# Documentation: https://goreleaser.com
+
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    - go generate ./...
+
+builds:
+  - id: ghex
+    main: ./cmd/ghex
+    binary: ghex
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X main.Version={{.Version}}
+      - -X main.Commit={{.Commit}}
+      - -X main.Date={{.Date}}
+
+archives:
+  - id: default
+    format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}-
+      {{- .Os }}-
+      {{- .Arch }}
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE
+      - CHANGELOG.md
+
+checksum:
+  name_template: 'checksums.txt'
+  algorithm: sha256
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
+      - '^chore:'
+      - Merge pull request
+      - Merge branch
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: Bug Fixes
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: Performance
+      regexp: '^.*?perf(\([[:word:]]+\))??!?:.+$'
+      order: 2
+    - title: Others
+      order: 999
+
+release:
+  github:
+    owner: dwirx
+    name: ghex
+  draft: false
+  prerelease: auto
+  mode: replace
+  header: |
+    ## GHEX {{ .Tag }}
+    
+    GitHub Account Switcher & Universal Downloader
+    
+    ### Installation
+    
+    **Quick Install:**
+    ```bash
+    # Linux/macOS
+    curl -sSL https://raw.githubusercontent.com/dwirx/ghex/main/scripts/install.sh | bash
+    
+    # Windows (PowerShell)
+    iwr -useb https://raw.githubusercontent.com/dwirx/ghex/main/scripts/install.ps1 | iex
+    ```
+  footer: |
+    ---
+    
+    **Full Changelog**: https://github.com/dwirx/ghex/compare/{{ .PreviousTag }}...{{ .Tag }}
+    
+    **Checksums**: See `checksums.txt` for SHA256 checksums of all binaries.
+
+# Homebrew tap (optional - for future)
+# brews:
+#   - repository:
+#       owner: dwirx
+#       name: homebrew-tap
+#     homepage: https://github.com/dwirx/ghex
+#     description: GitHub Account Switcher & Universal Downloader
+#     license: MIT
+#     install: |
+#       bin.install "ghex"
+
+# Scoop bucket (optional - for future)
+# scoops:
+#   - repository:
+#       owner: dwirx
+#       name: scoop-bucket
+#     homepage: https://github.com/dwirx/ghex
+#     description: GitHub Account Switcher & Universal Downloader
+#     license: MIT
