@@ -6,6 +6,8 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"golang.org/x/term"
+	"os"
 )
 
 // SelectorItem represents an item in the selector
@@ -23,6 +25,8 @@ type SelectorModel struct {
 	title    string
 	done     bool
 	canceled bool
+	width    int
+	height   int
 }
 
 // NewSelector creates a new selector model
@@ -36,11 +40,16 @@ func NewSelector(title string, items []SelectorItem) SelectorModel {
 }
 
 func (m SelectorModel) Init() tea.Cmd {
-	return nil
+	return tea.Batch(tea.ClearScreen, tea.EnterAltScreen)
 }
 
 func (m SelectorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+		return m, nil
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q", "esc":
@@ -62,6 +71,20 @@ func (m SelectorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.cursor = 0 // Wrap to top
 			}
 
+		case "pgup", "ctrl+u":
+			// Jump up 5 items
+			m.cursor -= 5
+			if m.cursor < 0 {
+				m.cursor = 0
+			}
+
+		case "pgdown", "ctrl+d":
+			// Jump down 5 items
+			m.cursor += 5
+			if m.cursor >= len(m.items) {
+				m.cursor = len(m.items) - 1
+			}
+
 		case "home", "g":
 			m.cursor = 0
 
@@ -78,57 +101,215 @@ func (m SelectorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+
 func (m SelectorModel) View() string {
 	if m.done {
 		return ""
 	}
 
+	// Use stored dimensions or get from terminal
+	width := m.width
+	height := m.height
+	if width == 0 {
+		if w, _, err := term.GetSize(int(os.Stdout.Fd())); err == nil && w > 0 {
+			width = w
+		} else {
+			width = 80
+		}
+	}
+	if height == 0 {
+		if _, h, err := term.GetSize(int(os.Stdout.Fd())); err == nil && h > 0 {
+			height = h
+		} else {
+			height = 24
+		}
+	}
+
+	// Calculate content width (max 70, min 40)
+	contentWidth := min(width-8, 70)
+	if contentWidth < 40 {
+		contentWidth = width - 4
+	}
+
+	// Determine if descriptions should be shown
+	showDesc := height > 20
+	
+	// Calculate how many items we can show
+	// Overhead: Title(2) + Progress(2) + Help(2) + Border(4) + Padding(2) + Scroll indicators(2) = ~14 lines
+	linesPerItem := 1
+	if showDesc {
+		linesPerItem = 2 // title + description
+	}
+	
+	availableLines := height - 14
+	if availableLines < 3 {
+		availableLines = 3
+	}
+	maxVisibleItems := availableLines / linesPerItem
+	if maxVisibleItems < 3 {
+		maxVisibleItems = 3 // Minimum 3 items visible
+	}
+	if maxVisibleItems > len(m.items) {
+		maxVisibleItems = len(m.items)
+	}
+
+	// Calculate viewport start/end to keep cursor visible
+	viewportStart := 0
+	viewportEnd := len(m.items)
+	
+	if len(m.items) > maxVisibleItems {
+		// Need scrolling - keep cursor visible within viewport
+		if m.cursor < viewportStart {
+			viewportStart = m.cursor
+		} else if m.cursor >= viewportStart+maxVisibleItems {
+			viewportStart = m.cursor - maxVisibleItems + 1
+		}
+		
+		// Recalculate based on cursor position
+		viewportStart = m.cursor - maxVisibleItems/2
+		if viewportStart < 0 {
+			viewportStart = 0
+		}
+		
+		viewportEnd = viewportStart + maxVisibleItems
+		if viewportEnd > len(m.items) {
+			viewportEnd = len(m.items)
+			viewportStart = viewportEnd - maxVisibleItems
+			if viewportStart < 0 {
+				viewportStart = 0
+			}
+		}
+	}
+
+
 	var b strings.Builder
 
-	// Title
+	// Title with fancy styling
 	titleStyle := lipgloss.NewStyle().
 		Bold(true).
-		Foreground(PrimaryColor).
-		MarginBottom(1)
+		Foreground(lipgloss.Color("#FF79C6")).
+		Background(lipgloss.Color("#44475a")).
+		Padding(0, 2).
+		Width(contentWidth).
+		Align(lipgloss.Center)
 
 	b.WriteString(titleStyle.Render(m.title))
 	b.WriteString("\n\n")
 
-	// Items
-	for i, item := range m.items {
-		cursor := "  "
-		style := lipgloss.NewStyle().Foreground(TextColor)
+	// Show scroll up indicator if needed
+	if viewportStart > 0 {
+		scrollUpStyle := lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#ffb86c")).
+			Align(lipgloss.Center).
+			Width(contentWidth)
+		b.WriteString(scrollUpStyle.Render(fmt.Sprintf("▲ %d more above", viewportStart)))
+		b.WriteString("\n")
+	}
+
+	// Items with improved visibility (only visible ones)
+	for i := viewportStart; i < viewportEnd; i++ {
+		item := m.items[i]
+		var line string
+		var style lipgloss.Style
 
 		if i == m.cursor {
-			cursor = "▸ "
+			// Selected item - highlighted background
 			style = lipgloss.NewStyle().
-				Foreground(AccentColor).
-				Bold(true)
+				Foreground(lipgloss.Color("#282a36")).
+				Background(lipgloss.Color("#50fa7b")).
+				Bold(true).
+				Padding(0, 1).
+				Width(contentWidth - 4)
+			line = fmt.Sprintf("▸ %s", item.Title)
+		} else {
+			// Normal item
+			style = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#f8f8f2")).
+				Padding(0, 1).
+				Width(contentWidth - 4)
+			line = fmt.Sprintf("  %s", item.Title)
 		}
 
-		line := fmt.Sprintf("%s%s", cursor, item.Title)
 		b.WriteString(style.Render(line))
 		b.WriteString("\n")
 
-		if item.Description != "" {
+		// Description with brighter color (only if space allows)
+		if item.Description != "" && showDesc {
 			descStyle := lipgloss.NewStyle().
-				Foreground(MutedColor).
-				MarginLeft(4)
+				Foreground(lipgloss.Color("#8be9fd")).
+				PaddingLeft(4)
 			b.WriteString(descStyle.Render(item.Description))
 			b.WriteString("\n")
 		}
 	}
 
-	// Help
+	// Show scroll down indicator if needed
+	if viewportEnd < len(m.items) {
+		scrollDownStyle := lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#ffb86c")).
+			Align(lipgloss.Center).
+			Width(contentWidth)
+		b.WriteString(scrollDownStyle.Render(fmt.Sprintf("▼ %d more below", len(m.items)-viewportEnd)))
+		b.WriteString("\n")
+	}
+
+	// Visual progress bar
+	progress := float64(m.cursor+1) / float64(len(m.items))
+	barWidth := contentWidth - 10
+	if barWidth < 10 {
+		barWidth = 10
+	}
+	filled := int(progress * float64(barWidth))
+	if filled < 1 {
+		filled = 1
+	}
+	
+	progressBar := strings.Repeat("█", filled) + strings.Repeat("░", barWidth-filled)
+	posStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#50fa7b")).
+		Align(lipgloss.Center).
+		Width(contentWidth)
+	b.WriteString(posStyle.Render(progressBar))
+	b.WriteString("\n")
+	
+	// Position text
+	posTextStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#6272a4")).
+		Align(lipgloss.Center).
+		Width(contentWidth)
+	b.WriteString(posTextStyle.Render(fmt.Sprintf("%d of %d", m.cursor+1, len(m.items))))
+	b.WriteString("\n")
+
+	// Help with better visibility
 	helpStyle := lipgloss.NewStyle().
-		Foreground(MutedColor).
-		MarginTop(1)
+		Foreground(lipgloss.Color("#bd93f9")).
+		Align(lipgloss.Center).
+		Width(contentWidth).
+		Italic(true)
 
 	b.WriteString("\n")
-	b.WriteString(helpStyle.Render("↑/k up • ↓/j down • enter/l select • q/esc cancel"))
+	b.WriteString(helpStyle.Render("↑↓/jk nav • PgUp/Dn jump • enter select • q quit"))
 
-	return b.String()
+
+	// Wrap everything in a bordered box
+	boxStyle := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("#ff79c6")).
+		Padding(1, 2).
+		Width(contentWidth)
+
+	boxContent := boxStyle.Render(b.String())
+
+	// Center only horizontally, keep at top
+	centeredStyle := lipgloss.NewStyle().
+		Width(width).
+		Align(lipgloss.Center)
+
+	return centeredStyle.Render(boxContent)
+
 }
+
+
 
 // Selected returns the selected index (-1 if canceled)
 func (m SelectorModel) Selected() int {
