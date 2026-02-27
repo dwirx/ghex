@@ -24,11 +24,13 @@ func GenerateKey(keyPath, comment string) error {
 	}
 
 	// Generate key using ssh-keygen
+	// Use ToSSHPath to convert Windows backslashes to forward slashes for SSH compatibility
 	args := []string{
 		"-t", "ed25519",
-		"-f", keyPath,
+		"-f", platform.ToSSHPath(keyPath),
 		"-C", comment,
 		"-N", "", // Empty passphrase
+		"-q",    // Quiet mode to prevent interactive prompts
 	}
 
 	_, err := shell.Run("ssh-keygen", args...)
@@ -92,7 +94,8 @@ func EnsurePublicKey(privateKeyPath string) (string, error) {
 	}
 
 	// Generate public key from private key
-	output, err := shell.Run("ssh-keygen", "-y", "-f", privateKeyPath)
+	// Use ToSSHPath to convert Windows backslashes to forward slashes for SSH compatibility
+	output, err := shell.Run("ssh-keygen", "-y", "-f", platform.ToSSHPath(privateKeyPath))
 	if err != nil {
 		return "", fmt.Errorf("failed to generate public key: %w", err)
 	}
@@ -194,19 +197,24 @@ func ForceFixKeyPermissions(keyPath string) bool {
 	}
 
 	// Use chmod command directly for more reliable permission fixing
-	if !platform.IsWindows() {
+	// Also works in Git Bash on Windows (which has Unix chmod available)
+	if !platform.IsWindows() || isGitBash() {
+		// Convert path to SSH/POSIX format for Git Bash compatibility
+		// e.g. C:\Users\hendr\.ssh\key -> /c/Users/hendr/.ssh/key
+		chmodPath := platform.ToSSHPath(keyPath)
+
 		// Fix private key permissions (600)
-		_, _ = shell.Exec("chmod", "600", keyPath)
+		_, _ = shell.Exec("chmod", "600", chmodPath)
 
 		// Fix public key permissions (644) if exists
 		pubPath := keyPath + ".pub"
 		if platform.FileExists(pubPath) {
-			_, _ = shell.Exec("chmod", "644", pubPath)
+			_, _ = shell.Exec("chmod", "644", platform.ToSSHPath(pubPath))
 		}
 		return true
 	}
 
-	// On Windows, use os.Chmod (may not work perfectly but try anyway)
+	// On Windows (PowerShell/cmd), use os.Chmod (may not work perfectly but try anyway)
 	_ = os.Chmod(keyPath, 0600)
 	pubPath := keyPath + ".pub"
 	if platform.FileExists(pubPath) {
@@ -215,18 +223,27 @@ func ForceFixKeyPermissions(keyPath string) bool {
 	return true
 }
 
+// isGitBash returns true if running in Git Bash / MSYS2 on Windows
+func isGitBash() bool {
+	return platform.IsGitBashEnv()
+}
+
 // EnsureSSHDirPermissions ensures ~/.ssh directory and config have correct permissions
 func EnsureSSHDirPermissions() {
 	sshDir := platform.GetSSHDir()
 
-	if !platform.IsWindows() {
+	// Run chmod on non-Windows OR when running in Git Bash (which has Unix chmod available)
+	if !platform.IsWindows() || isGitBash() {
+		// Convert path to SSH/POSIX format for Git Bash compatibility
+		sshDirPosix := platform.ToSSHPath(sshDir)
+
 		// Fix SSH directory permissions (700)
-		_, _ = shell.Exec("chmod", "700", sshDir)
+		_, _ = shell.Exec("chmod", "700", sshDirPosix)
 
 		// Fix SSH config permissions (600) if exists
-		configPath := sshDir + "/config"
+		configPath := filepath.Join(sshDir, "config")
 		if platform.FileExists(configPath) {
-			_, _ = shell.Exec("chmod", "600", configPath)
+			_, _ = shell.Exec("chmod", "600", platform.ToSSHPath(configPath))
 		}
 	}
 }
@@ -260,18 +277,19 @@ func TestConnectionWithKey(host, keyPath string) (bool, string, error) {
 		ForceFixKeyPermissions(keyPath)
 
 		// IMPORTANT: These options ensure ONLY the specified key is used
-		// -F /dev/null - Ignore SSH config file completely (Linux/Mac)
-		// -F NUL - Ignore SSH config file completely (Windows)
+		// -F /dev/null - Ignore SSH config file completely (Linux/Mac/Git Bash)
+		// -F NUL - Ignore SSH config file completely (Windows cmd/PowerShell)
 		// IdentitiesOnly=yes - Only use identities specified on command line
 		// IdentityAgent=none - Disable ssh-agent to prevent using other keys
-		if platform.IsWindows() {
-			args = append(args, "-F", "NUL")
-		} else {
-			args = append(args, "-F", "/dev/null")
+		nullDevice := "/dev/null"
+		if platform.IsWindows() && !isGitBash() {
+			nullDevice = "NUL"
 		}
+		args = append(args, "-F", nullDevice)
 		args = append(args, "-o", "IdentitiesOnly=yes")
 		args = append(args, "-o", "IdentityAgent=none") // Disable ssh-agent
-		args = append(args, "-i", keyPath)
+		// Use ToSSHPath to convert Windows backslashes to forward slashes for SSH compatibility
+		args = append(args, "-i", platform.ToSSHPath(keyPath))
 	}
 
 	args = append(args, fmt.Sprintf("git@%s", host))
@@ -372,6 +390,11 @@ func ListPrivateKeys() ([]string, error) {
 
 		// Skip public keys
 		if strings.HasSuffix(name, ".pub") {
+			continue
+		}
+
+		// Skip PuTTY key files
+		if strings.HasSuffix(name, ".ppk") {
 			continue
 		}
 
